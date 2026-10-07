@@ -46,6 +46,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
+});
+
 // Link yang tidak dikenal: kalau belum login, arahkan ke login
 Route::fallback(function () {
     return auth()->check() ? abort(404) : redirect()->route('login');
