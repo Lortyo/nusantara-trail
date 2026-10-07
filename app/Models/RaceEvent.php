@@ -8,17 +8,26 @@ class RaceEvent extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $collection = 'race_events';
+    protected $collection = 'events';
 
     protected $fillable = [
+        'created_by',
+        'slug',
         'name',
-        'location',
-        'date',
         'description',
+        'location',
+        'eventDate',
+        'registrationOpenAt',
+        'registrationCloseAt',
+        'bannerUrl',
         'status',
+        'bibSequence',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'eventDate' => 'datetime',
+        'registrationOpenAt' => 'datetime',
+        'registrationCloseAt' => 'datetime',
+        'bibSequence' => 'integer',
     ];
 }
