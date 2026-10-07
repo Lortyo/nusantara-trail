@@ -1,135 +1,129 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin Dashboard') - Ridgeline Race Operations</title>
-    <!-- Tailwind CSS CDN -->
+    <title>@yield('title', 'Admin') · Nusantara Trail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            dark: '#0f2922', // Warna sidebar hijau gelap
-                            light: '#f4f5f0', // Warna background konten
-                            card: '#ffffff',
-                            accent: '#1b4332'
-                        }
-                    }
-                }
-            }
+            theme: { extend: {
+                fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+                colors: { forest: { 900: '#123a2b', 800: '#1a4d38', 700: '#1f5c42', 600: '#2a7352' } }
+            } }
         }
     </script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @verbatim
+    <style type="text/tailwindcss">
+        @layer components {
+            .card { @apply bg-white rounded-2xl border border-[#e9e7df]; }
+            .lbl { @apply block text-[13px] font-semibold text-gray-900 mb-1.5; }
+            .inp { @apply w-full h-11 rounded-xl border border-[#e2e0d8] bg-white px-4 text-sm text-gray-900 focus:outline-none focus:border-forest-700 focus:ring-1 focus:ring-forest-700; }
+            .btn-primary { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-forest-700 hover:bg-forest-800 text-white text-sm font-semibold transition-colors; }
+            .btn-outline { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-white border border-[#e2e0d8] hover:bg-gray-50 text-sm font-semibold text-gray-900 transition-colors; }
+            .th { @apply px-6 py-3 text-left text-xs font-medium text-gray-500; }
+            .td { @apply px-6 py-4 text-sm text-gray-900; }
+            .chip { @apply inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold; }
+        }
+    </style>
+    <style>[x-cloak] { display: none !important; }</style>
+    @endverbatim
 </head>
-<body class="bg-[#f4f5f0] text-gray-800 font-sans antialiased">
+<body class="font-sans antialiased bg-[#f4f3ee] text-gray-900">
 
-    <div class="flex h-screen overflow-hidden">
-        
-        <!-- SIDEBAR BACKEND -->
-        <aside class="w-64 bg-[#0f2922] text-gray-300 flex flex-col justify-between hidden md:flex">
+@php
+    $nav = [
+        ['Dashboard', 'ph-squares-four', '/admin/dashboard', 'admin/dashboard*'],
+        ['Events', 'ph-calendar-blank', '/admin/events', 'admin/events*'],
+        ['Qualifications', 'ph-seal-check', '#', 'admin/qualifications*'],
+        ['Participants', 'ph-users', '#', 'admin/participants*'],
+        ['Check-in', 'ph-scan', '#', 'admin/check-in*'],
+        ['Results', 'ph-trophy', '#', 'admin/results*'],
+    ];
+    $initials = strtoupper(mb_substr(auth()->user()->name ?? 'A', 0, 2));
+@endphp
+
+<div class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside class="fixed inset-y-0 left-0 w-[240px] bg-forest-900 text-white flex flex-col">
+        <div class="px-5 pt-6 pb-5 flex items-center gap-3">
+            <i class="ph ph-mountains text-3xl text-[#b9d9c4]"></i>
             <div>
-                <!-- Logo Brand -->
-                <div class="p-6 flex items-center space-x-3 border-b border-gray-800">
-                    <div class="text-white font-bold text-xl tracking-wider flex items-center">
-                        <svg class="w-8 h-8 text-emerald-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        RIDGELINE
-                    </div>
-                </div>
-                <div class="px-6 py-2 text-xs uppercase tracking-wider text-emerald-500 font-semibold">Race Operations</div>
-
-                <!-- Selector / Dropdown Trail Collective -->
-                <div class="px-4 py-3">
-                    <div class="bg-[#15382e] p-2 rounded-lg flex items-center justify-between text-sm text-white cursor-pointer">
-                        <span>Trail Collective</span>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </div>
-                </div>
-
-                <!-- Navigation Menu -->
-                <nav class="mt-4 px-3 space-y-1">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-3 py-2.5 rounded-lg bg-[#1b4332] text-white font-medium text-sm">
-                        <svg class="w-5 h-5 mr-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                        Dashboard
-                    </a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-[#15382e] text-gray-300 text-sm transition">
-                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        Events
-                    </a>
-                    <a href="#" class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#15382e] text-gray-300 text-sm transition">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Qualifications
-                        </div>
-                        <span class="bg-amber-500 text-gray-900 font-bold text-xs px-2 py-0.5 rounded-full">5</span>
-                    </a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-[#15382e] text-gray-300 text-sm transition">
-                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        Participants
-                    </a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-[#15382e] text-gray-300 text-sm transition">
-                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                        Check-in
-                    </a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-[#15382e] text-gray-300 text-sm transition">
-                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        Results
-                    </a>
-                </nav>
+                <p class="text-[15px] font-bold tracking-wide leading-tight">NUSANTARA TRAIL</p>
+                <p class="text-[10px] tracking-widest text-white/60">RACE OPERATIONS</p>
             </div>
-
-            <!-- User Profile & Logout Footer Sidebar -->
-            <div class="p-4 border-t border-gray-800 flex items-center justify-between">
-                <div class="flex items-center space-x-3 overflow-hidden">
-                    <div class="w-9 h-9 shrink-0 rounded bg-emerald-600 flex items-center justify-center font-bold text-white text-sm">
-                        {{ strtoupper(substr(Auth::user()->name ?? 'Admin', 0, 2)) }}
-                    </div>
-                    <div class="truncate">
-                        <div class="text-sm font-medium text-white truncate">{{ Auth::user()->name ?? 'Admin' }}</div>
-                        <div class="text-xs text-gray-400">Race administrator</div>
-                    </div>
-                </div>
-                
-                <!-- Tombol Logout (Menggunakan Form POST ke route /logout) -->
-                <form action="{{ url('/logout') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" title="Keluar Akun" class="text-gray-400 hover:text-red-400 transition cursor-pointer p-1.5 rounded-lg hover:bg-[#15382e]">
-                        <!-- Ikon Logout -->
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </aside>
-
-        <!-- MAIN CONTENT AREA -->
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            
-            <!-- Top Navigation Bar -->
-            <header class="bg-[#f4f5f0] border-b border-gray-200 px-8 py-4 flex justify-between items-center text-sm">
-                <div class="text-gray-500 flex items-center space-x-2">
-                    <span>Workspace</span>
-                    <span>></span>
-                    <span class="text-gray-800 font-medium">Dashboard</span>
-                </div>
-                <div class="flex items-center space-x-6 text-gray-600">
-                    <span class="text-xs font-semibold bg-gray-200 px-2.5 py-1 rounded">Asia/Bangkok · THB</span>
-                    <svg class="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    <svg class="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-            </header>
-
-            <!-- Dynamic Blade Content -->
-            <main class="p-8">
-                @yield('content')
-            </main>
-
         </div>
+
+        <div class="mx-4 mb-5 rounded-lg border border-white/15 px-3 py-2.5 flex items-center gap-2 text-sm">
+            <i class="ph ph-tree-evergreen text-lg text-white/70"></i>
+            <span>Nusantara Trail Series</span>
+        </div>
+
+        <nav class="px-3 space-y-1">
+            @foreach($nav as [$label, $icon, $href, $pattern])
+                <a href="{{ $href }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors {{ request()->is($pattern) ? 'bg-white/10 text-white font-medium' : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+                    <i class="ph {{ $icon }} text-lg"></i>
+                    <span>{{ $label }}</span>
+                </a>
+            @endforeach
+        </nav>
+
+        <div class="mt-auto px-4 py-4 flex items-center gap-3 border-t border-white/10">
+            <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">{{ $initials }}</div>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold truncate">{{ auth()->user()->name }}</p>
+                <p class="text-xs text-white/60">Race administrator</p>
+            </div>
+            <form action="/logout" method="POST">
+                @csrf
+                <button type="submit" title="Logout" class="text-white/60 hover:text-white">
+                    <i class="ph ph-sign-out text-xl"></i>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- KONTEN -->
+    <div class="flex-1 ml-[240px] min-w-0">
+        <header class="h-14 bg-white border-b border-[#e9e7df] px-10 flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2 text-gray-500">
+                <span>Workspace</span>
+                <i class="ph ph-caret-right text-xs"></i>
+                <span class="text-gray-900">@yield('breadcrumb', 'Events')</span>
+            </div>
+            <div class="flex items-center gap-4 text-gray-500">
+                <span>{{ config('app.timezone') }} · IDR</span>
+                <i class="ph ph-question text-lg"></i>
+                <i class="ph ph-bell text-lg"></i>
+            </div>
+        </header>
+
+        <main class="px-10 py-8 max-w-[1240px]">
+            @if(session('success'))
+                <div class="mb-5 rounded-xl bg-[#e3f0e8] border border-[#c7dfd0] text-forest-800 text-sm px-4 py-3">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="mb-5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+                    <ul class="list-disc pl-5 space-y-0.5">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @yield('content')
+        </main>
     </div>
+</div>
 
 </body>
 </html>
