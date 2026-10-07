@@ -66,7 +66,16 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('/events');
+
+            $user = Auth::user();
+            
+
+            // Gunakan redirect biasa untuk memastikan tujuannya akurat
+            if ($user->role === 'admin') {
+                return redirect('/admin/dashboard');
+            }
+
+            return redirect('/events');
         }
 
         return back()->withErrors(['email' => 'Email atau password salah'])->withInput($request->only('email'));

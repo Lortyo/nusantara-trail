@@ -11,4 +11,10 @@ class User extends Authenticatable
 
     protected $fillable = ['name', 'email', 'password', 'role'];
     protected $hidden = ['password', 'remember_token'];
+
+    // TAMBAHKAN RELASI KE PROFILE
+    public function profile()
+    {
+        return $this->hasOne(Profile::class, 'user_id', '_id');
+    }
 }

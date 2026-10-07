@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController; 
 use Illuminate\Support\Facades\Route;
 
 // Hanya untuk yang BELUM login
@@ -27,9 +28,9 @@ Route::middleware('auth')->group(function () {
         return view('events');
     });
 
-    Route::get('/profil', function () {
-        return view('profil');
-    });
+    Route::get('/profil', [ProfileController::class, 'show'])->name('profil.show');
+    Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::post('/profil/edit', [ProfileController::class, 'update'])->name('profil.update');
 
     Route::get('/event-saya', function () {
         return view('event-saya');
