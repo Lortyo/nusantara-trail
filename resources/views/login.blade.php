@@ -24,7 +24,7 @@
 
             <div class="bg-white w-full max-w-[400px] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 z-10">
 
-                <h2 class="text-[26px] font-black text-gray-900 mb-1.5 tracking-tight">Welcome back</h2>
+                <h2 class="text-[26px] font-black text-gray-900 mb-1.5 tracking-tight">Welcome backh</h2>
                 <p class="text-[13px] text-gray-500 mb-6 leading-relaxed">Sign in to access the participant portal and prepare for your race.</p>
 
                 <form action="/login" method="POST">
