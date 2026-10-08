@@ -27,6 +27,12 @@ class RaceEvent extends Model
         'bannerUrl',
         'status',
         'bibSequence',
+        'kitDate', 
+        'kitStartTime', 
+        'kitEndTime', 
+        'kitVenue', 
+        'kitAddress', 
+        'kitMapUrl',
     ];
 
     protected $casts = [
@@ -37,6 +43,7 @@ class RaceEvent extends Model
         'transferDeadline' => 'datetime',
         'categoryChangeDeadline' => 'datetime',
         'bibSequence' => 'integer',
+        'kitDate' => 'datetime',
     ];
 
     public function stateFor(int $slotsLeft, int $quotaTotal): string

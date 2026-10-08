@@ -9,6 +9,8 @@ use App\Http\Controllers\CategoryChangeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\RaceKitController;
 
 // Hanya untuk yang BELUM login
 Route::middleware('guest')->group(function () {
@@ -51,9 +53,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/payments/{orderId}/sync', [PaymentController::class, 'sync']);
 
-    Route::get('/race-kit', function () {
-        return view('race-kit');
-    });
+    Route::get('/race-kit', [RaceKitController::class, 'show']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 });
@@ -74,6 +74,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/events/{eventId}/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export', [AdminDashboardController::class, 'export'])->name('dashboard.export');
 });
 
 Route::post('/midtrans/notification', [PaymentController::class, 'notification']);

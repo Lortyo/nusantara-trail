@@ -13,14 +13,17 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    public function __construct(private MidtransService $midtrans) {}
+    public function __construct(private MidtransService $midtrans)
+    {
+    }
 
     private function makePayment(string $purpose, string $refId, int $amount, $user, string $name, $expiresAt): Payment
     {
         $field = $purpose === 'upgrade' ? 'change_id' : 'registration_id';
 
         $existing = Payment::where($field, $refId)->where('status', 'pending')->first();
-        if ($existing && $existing->snapToken) return $existing;
+        if ($existing && $existing->snapToken)
+            return $existing;
 
         $payment = Payment::create([
             $field => $refId,
@@ -48,7 +51,11 @@ class PaymentController extends Controller
             $p = $this->makePayment('registration', (string) $reg->getKey(), (int) $reg->totalAmount, $request->user(), $name, $reg->expiresAt);
         } catch (\Throwable $e) {
             report($e);
-            return response()->json(['message' => 'Payment gateway error. Check your Midtrans keys in .env.'], 502);
+            return response()->json([
+                'message' => config('app.debug')
+                    ? 'Payment error: ' . $e->getMessage()
+                    : 'Payment gateway error. Check your Midtrans keys in .env.',
+            ], 502);
         }
 
         return response()->json(['token' => $p->snapToken, 'orderId' => $p->orderId]);
@@ -65,7 +72,11 @@ class PaymentController extends Controller
             $p = $this->makePayment('upgrade', (string) $chg->getKey(), (int) $chg->total, $request->user(), 'Category change', $chg->expiresAt);
         } catch (\Throwable $e) {
             report($e);
-            return response()->json(['message' => 'Payment gateway error. Check your Midtrans keys in .env.'], 502);
+            return response()->json([
+                'message' => config('app.debug')
+                    ? 'Payment error: ' . $e->getMessage()
+                    : 'Payment gateway error. Check your Midtrans keys in .env.',
+            ], 502);
         }
 
         return response()->json(['token' => $p->snapToken, 'orderId' => $p->orderId]);
@@ -77,7 +88,8 @@ class PaymentController extends Controller
         $payment = Payment::where('orderId', $orderId)->where('user_id', (string) $request->user()->getKey())->firstOrFail();
 
         $status = $this->midtrans->status($orderId);
-        if (isset($status['transaction_status'])) $this->midtrans->apply($status);
+        if (isset($status['transaction_status']))
+            $this->midtrans->apply($status);
 
         return response()->json(['status' => $payment->fresh()->status]);
     }
@@ -86,7 +98,7 @@ class PaymentController extends Controller
     public function notification(Request $request)
     {
         $payload = $request->all();
-        if (! $this->midtrans->validSignature($payload)) {
+        if (!$this->midtrans->validSignature($payload)) {
             return response()->json(['message' => 'Invalid signature'], 403);
         }
         $this->midtrans->apply($payload);

@@ -29,7 +29,8 @@
         <div class="flex items-start justify-between gap-4">
             <div>
                 <h1 class="text-[28px] font-semibold tracking-tight text-forest-900">
-                    {{ $isNew ? 'New event' : $event->name }}</h1>
+                    {{ $isNew ? 'New event' : $event->name }}
+                </h1>
                 <p class="text-sm text-gray-500 mt-1">
                     Event settings / {{ $isNew ? 'not saved yet' : strtoupper($event->slug) }}
                     @unless($isNew) · Last saved {{ optional($event->updated_at)->format('d M Y, H:i') }} @endunless
@@ -127,7 +128,8 @@
                                 <select name="timezone" class="inp">
                                     @foreach(['Asia/Jakarta' => 'Asia/Jakarta (WIB, UTC+7)', 'Asia/Makassar' => 'Asia/Makassar (WITA, UTC+8)', 'Asia/Jayapura' => 'Asia/Jayapura (WIT, UTC+9)'] as $tz => $tzLabel)
                                         <option value="{{ $tz }}" @selected(old('timezone', $event->timezone) === $tz)>
-                                            {{ $tzLabel }}</option>
+                                            {{ $tzLabel }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -170,6 +172,29 @@
                             <p class="text-xs text-gray-500 mt-1.5">Runners can upgrade or downgrade until this date.</p>
                         </div>
                     </div>
+                </div>
+
+                <div x-show="tab === 'settings'" x-cloak class="card p-6 mt-6">
+                    <h2 class="text-lg font-semibold">Race kit collection</h2>
+                    <p class="text-sm text-gray-500 mt-1 mb-5">Shown to runners on their Race kit page. Leave empty if not
+                        announced yet.</p>
+                    <div class="grid grid-cols-3 gap-5">
+                        <div><label class="lbl">Date</label><input type="date" class="inp" name="kitDate"
+                                value="{{ old('kitDate', optional($event->kitDate)->format('Y-m-d')) }}"></div>
+                        <div><label class="lbl">Start time</label><input type="time" class="inp" name="kitStartTime"
+                                value="{{ old('kitStartTime', $event->kitStartTime) }}"></div>
+                        <div><label class="lbl">End time</label><input type="time" class="inp" name="kitEndTime"
+                                value="{{ old('kitEndTime', $event->kitEndTime) }}"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-5 mt-5">
+                        <div><label class="lbl">Location name</label><input class="inp" name="kitVenue"
+                                value="{{ old('kitVenue', $event->kitVenue) }}"></div>
+                        <div><label class="lbl">Map link (optional)</label><input class="inp" name="kitMapUrl"
+                                value="{{ old('kitMapUrl', $event->kitMapUrl) }}" placeholder="https://maps.google.com/...">
+                        </div>
+                    </div>
+                    <div class="mt-5"><label class="lbl">Address</label><input class="inp" name="kitAddress"
+                            value="{{ old('kitAddress', $event->kitAddress) }}"></div>
                 </div>
             </form>
 

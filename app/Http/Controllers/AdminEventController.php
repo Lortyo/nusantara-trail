@@ -30,6 +30,12 @@ class AdminEventController extends Controller
             'transferDeadline' => 'nullable|date',
             'categoryChangeDeadline' => 'nullable|date',
             'bannerUrl' => 'nullable|url',
+            'kitDate' => 'nullable|required_with:kitStartTime,kitEndTime,kitVenue|date',
+            'kitStartTime' => 'nullable|required_with:kitDate,kitEndTime,kitVenue|date_format:H:i',
+            'kitEndTime' => 'nullable|required_with:kitDate,kitStartTime,kitVenue|date_format:H:i|after:kitStartTime',
+            'kitVenue' => 'nullable|required_with:kitDate,kitStartTime,kitEndTime|string|max:150',
+            'kitAddress' => 'nullable|string|max:300',
+            'kitMapUrl' => 'nullable|url',
         ];
     }
 
@@ -54,12 +60,12 @@ class AdminEventController extends Controller
             ? RaceCategory::where('event_id', (string) $event->getKey())->orderBy('distanceKm')->get()
             : collect();
 
-        $categories->each(fn ($c) => $c->registered = $c->quota - $c->slotsAvailable);
+        $categories->each(fn($c) => $c->registered = $c->quota - $c->slotsAvailable);
 
         $common = [];
         if ($categories->isNotEmpty()) {
             $lists = $categories
-                ->map(fn ($c) => array_map(fn ($b) => mb_strtolower(trim($b)), (array) ($c->benefits ?? [])))
+                ->map(fn($c) => array_map(fn($b) => mb_strtolower(trim($b)), (array) ($c->benefits ?? [])))
                 ->all();
             $common = array_values(array_intersect(...$lists));
         }
@@ -84,8 +90,8 @@ class AdminEventController extends Controller
         ];
 
         $events = RaceEvent::query()
-            ->when($request->query('q'), fn ($q, $v) => $q->where('name', 'like', "%{$v}%"))
-            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
+            ->when($request->query('q'), fn($q, $v) => $q->where('name', 'like', "%{$v}%"))
+            ->when($request->query('status'), fn($q, $v) => $q->where('status', $v))
             ->when($request->query('season'), function ($q, $year) {
                 $year = (int) $year;
                 return $q->whereBetween('eventDate', [
@@ -97,7 +103,7 @@ class AdminEventController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $ids = $events->map(fn ($e) => (string) $e->getKey())->all();
+        $ids = $events->map(fn($e) => (string) $e->getKey())->all();
         $cats = RaceCategory::whereIn('event_id', $ids)->get()->groupBy('event_id');
 
         $stats = [];
@@ -105,8 +111,8 @@ class AdminEventController extends Controller
             $id = (string) $e->getKey();
             $list = ($cats[$id] ?? collect())->sortBy('distanceKm');
             $stats[$id] = [
-                'label' => $list->map(fn ($c) => $this->km($c->distanceKm) . 'K')->implode(' / ') ?: '-',
-                'taken' => $list->sum(fn ($c) => $c->quota - $c->slotsAvailable),
+                'label' => $list->map(fn($c) => $this->km($c->distanceKm) . 'K')->implode(' / ') ?: '-',
+                'taken' => $list->sum(fn($c) => $c->quota - $c->slotsAvailable),
                 'total' => $list->sum('quota'),
             ];
         }
@@ -159,7 +165,7 @@ class AdminEventController extends Controller
 
         if (in_array($action, ['publish', 'reopen'])) {
             $hasCategories = RaceCategory::where('event_id', $id)->exists();
-            if (! $hasCategories || blank($event->registrationOpenAt) || blank($event->registrationCloseAt)) {
+            if (!$hasCategories || blank($event->registrationOpenAt) || blank($event->registrationCloseAt)) {
                 return back()->withErrors(['status' => 'Add at least one category and set the registration dates before opening registration.']);
             }
             $event->update(['status' => 'open']);
