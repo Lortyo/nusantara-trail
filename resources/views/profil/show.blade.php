@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.participant')
 
 @section('title', 'Participant Profile')
 
