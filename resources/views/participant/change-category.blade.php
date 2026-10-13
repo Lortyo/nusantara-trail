@@ -98,6 +98,7 @@
                     <div>
                         <p class="font-bold">{{ $req['title'] }}</p>
                         <p class="text-sm {{ $req['ok'] === true ? 'text-[#1f8f55]' : ($req['ok'] === false ? 'text-red-500' : 'text-ember') }}">{{ $req['note'] }}</p>
+                        @if($req['ok'] === false && ! empty($req['link']))<a href="{{ $req['link'] }}" class="text-sm font-bold underline">Submit proof</a>@endif
                         @if($req['ok'] === null)
                             <input type="file" name="medical_certificate" accept=".pdf,.jpg,.jpeg,.png"
                                    class="mt-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#eeeee9] file:px-3 file:py-2 file:font-semibold">

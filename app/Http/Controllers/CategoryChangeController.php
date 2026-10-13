@@ -27,6 +27,7 @@ class CategoryChangeController extends Controller
                 'title' => 'Trail finish ≥ ' . $this->km(data_get($to, 'qualification.minDistanceKm')) . 'K / ' . data_get($to, 'qualification.withinYears') . ' years',
                 'ok' => $ok,
                 'note' => $ok ? 'Eligible' : 'Qualification not approved yet',
+                'link' => '/qualification?category=' . $to->getKey(),
             ];
         }
         if ($isUpgrade) {

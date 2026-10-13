@@ -140,7 +140,7 @@ class MidtransService
     }
 
     // Buat nomor BIB (berurutan per event) dan QR token
-    private function issueTicket(Registration $reg): void
+    public function issueTicket(Registration $reg): void
     {
         if (Ticket::where('registration_id', (string) $reg->getKey())->exists())
             return;

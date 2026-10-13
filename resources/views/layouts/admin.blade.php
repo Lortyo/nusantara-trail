@@ -23,16 +23,16 @@
     @verbatim
         <style type="text/tailwindcss">
             @layer components {
-                .card { @apply bg-white rounded-2xl border border-[#e9e7df]; }
-                .lbl { @apply block text-[13px] font-semibold text-gray-900 mb-1.5; }
-                .inp { @apply w-full h-11 rounded-xl border border-[#e2e0d8] bg-white px-4 text-sm text-gray-900 focus:outline-none focus:border-forest-700 focus:ring-1 focus:ring-forest-700; }
-                .btn-primary { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-forest-700 hover:bg-forest-800 text-white text-sm font-semibold transition-colors; }
-                .btn-outline { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-white border border-[#e2e0d8] hover:bg-gray-50 text-sm font-semibold text-gray-900 transition-colors; }
-                .th { @apply px-6 py-3 text-left text-xs font-medium text-gray-500; }
-                .td { @apply px-6 py-4 text-sm text-gray-900; }
-                .chip { @apply inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold; }
-            }
-        </style>
+                    .card { @apply bg-white rounded-2xl border border-[#e9e7df]; }
+                    .lbl { @apply block text-[13px] font-semibold text-gray-900 mb-1.5; }
+                    .inp { @apply w-full h-11 rounded-xl border border-[#e2e0d8] bg-white px-4 text-sm text-gray-900 focus:outline-none focus:border-forest-700 focus:ring-1 focus:ring-forest-700; }
+                    .btn-primary { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-forest-700 hover:bg-forest-800 text-white text-sm font-semibold transition-colors; }
+                    .btn-outline { @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-white border border-[#e2e0d8] hover:bg-gray-50 text-sm font-semibold text-gray-900 transition-colors; }
+                    .th { @apply px-6 py-3 text-left text-xs font-medium text-gray-500; }
+                    .td { @apply px-6 py-4 text-sm text-gray-900; }
+                    .chip { @apply inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold; }
+                }
+            </style>
         <style>
             [x-cloak] {
                 display: none !important;
@@ -48,9 +48,9 @@
         $nav = [
             ['Dashboard', 'ph-squares-four', '/admin/dashboard', 'admin/dashboard*'],
             ['Events', 'ph-calendar-blank', '/admin/events', 'admin/events*'],
-            ['Qualifications', 'ph-seal-check', '#', 'admin/qualifications*'],
-            ['Participants', 'ph-users', '#', 'admin/participants*'],
-            ['Check-in', 'ph-scan', '#', 'admin/check-in*'],
+            ['Qualifications', 'ph-seal-check', '/admin/qualifications', 'admin/qualifications*'],
+            ['Participants', 'ph-users', '/admin/participants', 'admin/participants*'],
+            ['Check-in', 'ph-scan', '/admin/check-in', 'admin/check-in*'],
             ['Results', 'ph-trophy', '#', 'admin/results*'],
         ];
         $initials = strtoupper(mb_substr(auth()->user()->name ?? 'A', 0, 2));
@@ -89,7 +89,8 @@
 
             <div class="mt-auto px-4 py-4 flex items-center gap-3 border-t border-white/10">
                 <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">
-                    {{ $initials }}</div>
+                    {{ $initials }}
+                </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold truncate">{{ auth()->user()->name }}</p>
                     <p class="text-xs text-white/60">Race administrator</p>

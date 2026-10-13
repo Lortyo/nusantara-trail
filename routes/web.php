@@ -11,6 +11,10 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\RaceKitController;
+use App\Http\Controllers\AdminParticipantController;
+use App\Http\Controllers\AdminQualificationController;
+use App\Http\Controllers\QualificationController;
+use App\Http\Controllers\CheckInController;
 
 // Hanya untuk yang BELUM login
 Route::middleware('guest')->group(function () {
@@ -51,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/category-changes/{id}/pay', [CategoryChangeController::class, 'pay']);
     Route::post('/category-changes/{id}/checkout', [PaymentController::class, 'checkoutChange']);
 
+    Route::get('/qualification', [QualificationController::class, 'show']);
+    Route::post('/qualification', [QualificationController::class, 'store']);
+
     Route::post('/payments/{orderId}/sync', [PaymentController::class, 'sync']);
 
     Route::get('/race-kit', [RaceKitController::class, 'show']);
@@ -74,6 +81,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/events/{eventId}/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/qualifications', [AdminQualificationController::class, 'index'])->name('qualifications.index');
+    Route::patch('/qualifications/{id}', [AdminQualificationController::class, 'review'])->name('qualifications.review');
+
+    Route::get('/participants', [AdminParticipantController::class, 'index'])->name('participants.index');
+    Route::post('/events/{eventId}/participants', [AdminParticipantController::class, 'store'])->name('participants.store');
+    Route::put('/participants/{id}', [AdminParticipantController::class, 'update'])->name('participants.update');
+    Route::post('/participants/{id}/email', [AdminParticipantController::class, 'email'])->name('participants.email');
+    Route::get('/participants/{id}/receipt', [AdminParticipantController::class, 'receipt'])->name('participants.receipt');
+
+    Route::get('/check-in', [CheckInController::class, 'index'])->name('checkin.index');
+    Route::post('/check-in/scan', [CheckInController::class, 'scan'])->name('checkin.scan');
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/export', [AdminDashboardController::class, 'export'])->name('dashboard.export');
