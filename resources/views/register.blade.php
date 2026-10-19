@@ -151,5 +151,25 @@
 
     </div>
 
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('button[type="button"]').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('ph-eye-slash');
+                    icon.classList.add('ph-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('ph-eye');
+                    icon.classList.add('ph-eye-slash');
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>

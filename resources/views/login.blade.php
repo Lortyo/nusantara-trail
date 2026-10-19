@@ -71,7 +71,7 @@
                 </form>
 
                 <p class="text-[11px] text-center text-gray-500 mt-5">
-                    No account yet? Activate via your registration email.
+                    <a href="/register" class="text-gray-900 font-bold hover:underline">No account yet? </a>Activate via your registration email.
                 </p>
 
             </div>
