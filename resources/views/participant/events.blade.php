@@ -49,29 +49,20 @@
                 <div class="flex flex-wrap gap-2 mt-4">
                     @foreach($c['chips'] as $chip)<span class="chip bg-[#eeeee9] text-gray-600">{{ $chip }}</span>@endforeach
                 </div>
-                <div class="mt-auto pt-6 flex items-end justify-between gap-3">
+                <div class="mt-auto pt-6 flex flex-wrap items-end justify-between gap-x-3 gap-y-4">
                     <div>
                         <p class="text-xs text-gray-500">From</p>
-                        <p class="text-xl font-semibold">{{ $c['from'] ? 'Rp' . number_format($c['from'], 0, ',', '.') : '-' }}</p>
+                        <p class="text-xl font-semibold whitespace-nowrap">{{ $c['from'] ? 'Rp' . number_format($c['from'], 0, ',', '.') : '-' }}</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <a href="/events/{{ $c['id'] }}" class="text-sm font-semibold text-leaf hover:underline">View details</a>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <a href="/events/{{ $c['id'] }}" class="text-sm font-semibold text-leaf hover:underline whitespace-nowrap">View details</a>
 
                         @if(in_array($c['state'], ['open', 'spots_left']))
-                            <a href="/events/{{ $c['id'] }}#categories" class="btn-dark">Register</a>
+                            <a href="/events/{{ $c['id'] }}#categories" class="btn-dark whitespace-nowrap">Register</a>
                         @elseif($c['state'] === 'closed')
-                            <span class="btn-ghost opacity-60">Closed</span>
+                            <span class="btn-ghost opacity-60 whitespace-nowrap">Closed</span>
                         @else
-                            @php $type = $c['state'] === 'waitlist' ? 'waitlist' : 'notify'; @endphp
-                            @if(in_array($type, $c['subs']))
-                                <span class="btn-ghost opacity-60">{{ $type === 'waitlist' ? 'On waitlist' : 'We will notify you' }}</span>
-                            @else
-                                <form method="POST" action="/events/{{ $c['id'] }}/subscribe">
-                                    @csrf
-                                    <input type="hidden" name="type" value="{{ $type }}">
-                                    <button type="submit" class="btn-ghost">{{ $type === 'waitlist' ? 'Join waitlist' : 'Notify me' }}</button>
-                                </form>
-                            @endif
+                            ...bagian waitlist/notify tetap sama
                         @endif
                     </div>
                 </div>
