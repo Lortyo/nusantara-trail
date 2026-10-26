@@ -142,9 +142,14 @@ class AdminEventController extends Controller
 
         $event = RaceEvent::create($data);
 
-        return redirect()
-            ->route('admin.events.edit', ['id' => (string) $event->getKey(), 'tab' => 'categories'])
-            ->with('success', 'Event created. Now add the race categories.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Event created successfully',
+            'data' => $event
+        ], 201);
+        // return redirect()
+        //     ->route('admin.events.edit', ['id' => (string) $event->getKey(), 'tab' => 'categories'])
+        //     ->with('success', 'Event created. Now add the race categories.');
     }
 
     public function update(Request $request, string $id)
@@ -152,9 +157,14 @@ class AdminEventController extends Controller
         $event = RaceEvent::findOrFail($id);
         $event->update($request->validate($this->rules()));
 
-        return redirect()
-            ->route('admin.events.edit', ['id' => $id, 'tab' => $request->input('tab', 'info')])
-            ->with('success', 'Changes saved.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Event updated successfully',
+            'data' => $event
+        ], 200);
+        // return redirect()
+        //     ->route('admin.events.edit', ['id' => $id, 'tab' => $request->input('tab', 'info')])
+        //     ->with('success', 'Changes saved.');
     }
 
     // publish / close / reopen / finish

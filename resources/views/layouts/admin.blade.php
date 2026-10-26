@@ -125,7 +125,7 @@
                         {{ session('success') }}
                     </div>
                 @endif
-                @if($errors->any())
+                @if(isset($errors) && $error->any())
                     <div class="mb-5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
                         <ul class="list-disc pl-5 space-y-0.5">
                             @foreach($errors->all() as $error)

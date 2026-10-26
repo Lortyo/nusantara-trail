@@ -2,25 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\AdminEventController;
+use App\Http\Controllers\AdminDashboardController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
 // API Version 1
 Route::prefix('v1')->group(function () {
 
     // ============ PUBLIC ROUTES (No Auth) ============
-
-    // Authentication endpoints
     Route::prefix('auth')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
@@ -34,28 +28,27 @@ Route::prefix('v1')->group(function () {
     });
 
     // ============ PROTECTED ROUTES (Require JWT) ============
-
     Route::middleware('auth:api')->group(function () {
 
-        // Events (example - akan dibuat nanti)
-        // Route::get('events', [EventController::class, 'index']);
-        // Route::get('events/{id}', [EventController::class, 'show']);
+        // Events Read Routes (User & Admin)
+        Route::get('events', [AdminEventController::class, 'index']);
+        Route::get('events/{id}', [AdminEventController::class, 'show']);
 
-    });
+        // Dashboard Summary
+        Route::get('dashboard/summary', [AdminDashboardController::class, 'summary']);
 
-    // ============ ADMIN ROUTES (Require JWT + Admin Role) ============
-
-    Route::middleware(['auth:api', 'admin'])->prefix('admin')->group(function () {
-        // Admin routes akan ditambahkan nanti
+        // ============ ADMIN ONLY ROUTES (Require JWT + Admin Role) ============
+        Route::middleware('admin')->group(function () {
+            Route::post('events', [AdminEventController::class, 'store']);
+            Route::put('events/{id}', [AdminEventController::class, 'update']);
+            Route::delete('events/{id}', [AdminEventController::class, 'destroy']);
+        });
     });
 });
 
-// ============ WEBHOOKS (No Auth - Validate Signature Instead) ============
-
-// Midtrans webhook (existing)
+// ============ WEBHOOKS & HEALTH CHECK ============
 Route::post('/midtrans/notification', [\App\Http\Controllers\PaymentController::class, 'notification']);
 
-// Health check
 Route::get('/health', function () {
     return response()->json([
         'status' => 'OK',
