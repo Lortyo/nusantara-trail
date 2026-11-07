@@ -86,4 +86,37 @@ final class EventController extends Controller
             return null;
         }
     }
+
+    public function changeStatus(Request $request, string $id)
+    {
+        $event = RaceEvent::find($id);
+        if (! $event) {
+            return response()->json(['success' => false, 'message' => 'Event tidak ditemukan'], 404);
+        }
+
+        $action = (string) $request->input('action');
+        if (! in_array($action, ['publish', 'reopen', 'close', 'finish'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'action harus salah satu dari: publish, reopen, close, finish',
+            ], 400);
+        }
+
+        if (in_array($action, ['publish', 'reopen'], true)) {
+            $hasCategories = RaceCategory::where('event_id', $id)->exists();
+            if (! $hasCategories || blank($event->registrationOpenAt) || blank($event->registrationCloseAt)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tambahkan minimal satu kategori dan isi periode pendaftaran sebelum membuka pendaftaran',
+                ], 400);
+            }
+            $event->update(['status' => 'open']);
+        } elseif ($action === 'close') {
+            $event->update(['status' => 'closed']);
+        } else {
+            $event->update(['status' => 'finished']);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Status event diperbarui', 'data' => $event->fresh()]);
+    }
 }

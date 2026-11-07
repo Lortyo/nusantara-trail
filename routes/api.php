@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
             Route::post('events/{eventId}/categories', [CategoryController::class, 'store']);
             Route::put('categories/{id}', [CategoryController::class, 'update']);
             Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+            Route::patch('events/{id}/status', [EventController::class, 'changeStatus']);
         });
     });
 });
