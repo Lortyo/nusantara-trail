@@ -3,7 +3,7 @@
 // Usage: mongosh nusantara_trail < create_indexes.js
 
 // Use the database
-use nusantara_trail;
+db = db.getSiblingDB("nusantara_trail");
 
 print("\n=== Creating Indexes for Nusantara Trail Database ===\n");
 

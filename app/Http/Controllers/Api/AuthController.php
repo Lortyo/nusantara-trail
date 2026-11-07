@@ -21,7 +21,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',
@@ -34,14 +34,23 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
-            ], 422);
+            ], 400);
+        }
+
+        $email = strtolower($request->email);
+
+        if (User::where('email', $email)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email already registered',
+            ], 409);
         }
 
         try {
             // Create user
             $user = User::create([
                 'name' => $request->name,
-                'email' => strtolower($request->email),
+                'email' => $email,
                 'password' => Hash::make($request->password),
                 'role' => 'user',
             ]);
@@ -100,7 +109,7 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
-            ], 422);
+            ], 400);
         }
 
         $credentials = [

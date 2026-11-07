@@ -2,16 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\AdminEventController;
-use App\Http\Controllers\AdminDashboardController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
-// API Version 1
 Route::prefix('v1')->group(function () {
 
     // ============ PUBLIC ROUTES (No Auth) ============
@@ -27,16 +21,14 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    Route::get('events', [EventController::class, 'index']);
+    Route::get('events/{id}', [EventController::class, 'show']);
+
     // ============ PROTECTED ROUTES (Require JWT) ============
     Route::middleware('auth:api')->group(function () {
-
-        // Events Read Routes (User & Admin)
-        Route::get('events', [AdminEventController::class, 'index']);
-        Route::get('events/{id}', [AdminEventController::class, 'show']);
-
-        // Dashboard Summary
-        Route::get('dashboard/summary', [AdminDashboardController::class, 'summary']);
-
+        Route::get('profile', [ProfileController::class, 'show']);
+        Route::put('profile', [ProfileController::class, 'update']);
+            
         // ============ ADMIN ONLY ROUTES (Require JWT + Admin Role) ============
         Route::middleware('admin')->group(function () {
             Route::post('events', [AdminEventController::class, 'store']);

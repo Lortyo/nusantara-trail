@@ -188,16 +188,28 @@ class AdminEventController extends Controller
         return back()->with('success', 'Event status updated.');
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $event = RaceEvent::findOrFail($id);
+        $wantsJson = $request->is('api/*') || $request->expectsJson();
 
         if (Registration::where('event_id', $id)->exists()) {
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Event sudah memiliki pendaftaran dan tidak dapat dihapus',
+                ], 409);
+            }
+
             return back()->withErrors(['event' => 'This event already has registrations and cannot be deleted.']);
         }
 
         RaceCategory::where('event_id', $id)->delete();
         $event->delete();
+
+        if ($wantsJson) {
+            return response()->json(['success' => true, 'message' => 'Event deleted successfully'], 200);
+        }
 
         return redirect()->route('admin.events.index')->with('success', 'Event deleted.');
     }
