@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\AdminEventController;
+use App\Http\Controllers\Api\CategoryController;
 
 Route::prefix('v1')->group(function () {
 
@@ -23,17 +24,21 @@ Route::prefix('v1')->group(function () {
 
     Route::get('events', [EventController::class, 'index']);
     Route::get('events/{id}', [EventController::class, 'show']);
+    Route::get('events/{eventId}/categories', [CategoryController::class, 'index']);
 
     // ============ PROTECTED ROUTES (Require JWT) ============
     Route::middleware('auth:api')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::put('profile', [ProfileController::class, 'update']);
-            
+
         // ============ ADMIN ONLY ROUTES (Require JWT + Admin Role) ============
         Route::middleware('admin')->group(function () {
             Route::post('events', [AdminEventController::class, 'store']);
             Route::put('events/{id}', [AdminEventController::class, 'update']);
             Route::delete('events/{id}', [AdminEventController::class, 'destroy']);
+            Route::post('events/{eventId}/categories', [CategoryController::class, 'store']);
+            Route::put('categories/{id}', [CategoryController::class, 'update']);
+            Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
         });
     });
 });
