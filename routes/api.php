@@ -6,15 +6,16 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\RegistrationController;
 
 Route::prefix('v1')->group(function () {
 
-    // ============ PUBLIC ROUTES (No Auth) ============
+    // ================== PUBLIC ==================
     Route::prefix('auth')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
 
-        // Protected auth routes (need JWT token)
+        // ================== Butuh Token ==================
         Route::middleware('auth:api')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
             Route::post('refresh', [AuthController::class, 'refresh']);
@@ -26,12 +27,17 @@ Route::prefix('v1')->group(function () {
     Route::get('events/{id}', [EventController::class, 'show']);
     Route::get('events/{eventId}/categories', [CategoryController::class, 'index']);
 
-    // ============ PROTECTED ROUTES (Require JWT) ============
+    // ================== PROTECTED ROUTES ==================
     Route::middleware('auth:api')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::put('profile', [ProfileController::class, 'update']);
 
-        // ============ ADMIN ONLY ROUTES (Require JWT + Admin Role) ============
+        Route::post('registrations', [RegistrationController::class, 'store']);
+        Route::get('registrations/my', [RegistrationController::class, 'my']);
+        Route::get('registrations/{id}', [RegistrationController::class, 'show']);
+        Route::delete('registrations/{id}', [RegistrationController::class, 'destroy']);
+
+        // ================== ADMIN ONLY ROUTES ==================
         Route::middleware('admin')->group(function () {
             Route::post('events', [AdminEventController::class, 'store']);
             Route::put('events/{id}', [AdminEventController::class, 'update']);
