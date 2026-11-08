@@ -55,6 +55,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
             Route::patch('events/{id}/status', [EventController::class, 'changeStatus']);
             Route::get('organizer/registrations', [OrganizerController::class, 'registrations']);
+            Route::post('organizer/checkin/scan', [OrganizerController::class, 'scan']);
+            Route::get('organizer/dashboard/summary', [OrganizerController::class, 'dashboardSummary']);
         });
     });
 });
