@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\RegistrationController;
+use App\Http\Controllers\Api\PaymentController;
 
 Route::prefix('v1')->group(function () {
 
@@ -27,6 +28,8 @@ Route::prefix('v1')->group(function () {
     Route::get('events/{id}', [EventController::class, 'show']);
     Route::get('events/{eventId}/categories', [CategoryController::class, 'index']);
 
+    Route::post('payments/notification', [PaymentController::class, 'notification']);
+
     // ================== PROTECTED ROUTES ==================
     Route::middleware('auth:api')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
@@ -36,6 +39,9 @@ Route::prefix('v1')->group(function () {
         Route::get('registrations/my', [RegistrationController::class, 'my']);
         Route::get('registrations/{id}', [RegistrationController::class, 'show']);
         Route::delete('registrations/{id}', [RegistrationController::class, 'destroy']);
+        
+        Route::post('payments/checkout', [PaymentController::class, 'checkout']);
+        Route::get('payments/{orderId}', [PaymentController::class, 'show']);   
 
         // ================== ADMIN ONLY ROUTES ==================
         Route::middleware('admin')->group(function () {

@@ -62,7 +62,16 @@
                         @elseif($c['state'] === 'closed')
                             <span class="btn-ghost opacity-60 whitespace-nowrap">Closed</span>
                         @else
-                            ...bagian waitlist/notify tetap sama
+                            @php $type = $c['state'] === 'waitlist' ? 'waitlist' : 'notify'; @endphp
+                            @if(in_array($type, $c['subs']))
+                                <span class="btn-ghost opacity-60">{{ $type === 'waitlist' ? 'On waitlist' : 'We will notify you' }}</span>
+                            @else
+                                <form method="POST" action="/events/{{ $c['id'] }}/subscribe">
+                                    @csrf
+                                    <input type="hidden" name="type" value="{{ $type }}">
+                                    <button type="submit" class="btn-ghost">{{ $type === 'waitlist' ? 'Join waitlist' : 'Notify me' }}</button>
+                                </form>
+                            @endif
                         @endif
                     </div>
                 </div>
