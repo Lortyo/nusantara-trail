@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\OrganizerController;
 
 Route::prefix('v1')->group(function () {
 
@@ -39,6 +40,7 @@ Route::prefix('v1')->group(function () {
         Route::get('registrations/my', [RegistrationController::class, 'my']);
         Route::get('registrations/{id}', [RegistrationController::class, 'show']);
         Route::delete('registrations/{id}', [RegistrationController::class, 'destroy']);
+        Route::get('registrations/{id}/credential', [RegistrationController::class, 'credential']);
         
         Route::post('payments/checkout', [PaymentController::class, 'checkout']);
         Route::get('payments/{orderId}', [PaymentController::class, 'show']);   
@@ -52,6 +54,7 @@ Route::prefix('v1')->group(function () {
             Route::put('categories/{id}', [CategoryController::class, 'update']);
             Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
             Route::patch('events/{id}/status', [EventController::class, 'changeStatus']);
+            Route::get('organizer/registrations', [OrganizerController::class, 'registrations']);
         });
     });
 });

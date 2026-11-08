@@ -15,6 +15,10 @@ use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 
 class RegistrationController extends Controller
 {
@@ -222,5 +226,52 @@ class RegistrationController extends Controller
         Payment::where('registration_id', (string) $reg->getKey())->where('status', 'pending')->update(['status' => 'cancel']);
 
         return response()->json(['success' => true, 'message' => 'Reservasi dibatalkan, slot dikembalikan']);
+    }
+
+        private function qrDataUri(string $payload): string
+    {
+        $writer = new Writer(new ImageRenderer(new RendererStyle(320, 1), new SvgImageBackEnd()));
+
+        return 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($payload));
+    }
+
+    // GET /registrations/{id}/credential  (hanya pemilik, hanya status paid)
+    public function credential(Request $request, string $id)
+    {
+        $reg = Registration::find($id);
+        if (! $reg) {
+            return $this->fail('Pendaftaran tidak ditemukan', 404);
+        }
+        if ((string) $reg->user_id !== (string) $request->user()->getKey()) {
+            return $this->fail('Forbidden', 403);
+        }
+        if ($reg->status !== 'paid') {
+            return $this->fail('Pembayaran belum lunas', 403);
+        }
+
+        $ticket = Ticket::where('registration_id', (string) $reg->getKey())->first();
+        if (! $ticket) {
+            return $this->fail('Tiket belum tersedia', 404);
+        }
+
+        $profile = Profile::where('user_id', (string) $reg->user_id)->first();
+        $cat = RaceCategory::find($reg->category_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OK',
+            'data' => [
+                'bibNumber' => $ticket->bibNumber,
+                'bibName' => optional($profile)->bibName,
+                'name' => optional($profile)->fullName,
+                'event' => optional(RaceEvent::find($reg->event_id))->name,
+                'category' => $cat ? $this->km($cat->distanceKm) . 'K ' . $cat->name : null,
+                'qrToken' => $ticket->qrToken,
+                'qrImage' => $this->qrDataUri($ticket->qrToken),
+                'kitCollectedAt' => optional($ticket->kitCollectedAt)->toIso8601String(),
+                'checkedInAt' => optional($ticket->checkedInAt)->toIso8601String(),
+                'issuedAt' => optional($ticket->issuedAt)->toIso8601String(),
+            ],
+        ]);
     }
 }
