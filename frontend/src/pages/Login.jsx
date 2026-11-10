@@ -1,102 +1,144 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { getErrorMessage } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
+import { toast } from '../stores/toastStore';
+import backgroundImg from '../assets/bg-login.png'
 
 export default function Login() {
-  const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const location = useLocation();
+  const login = useAuthStore((s) => s.login);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  
+  // Menambahkan state 'remember' untuk checkbox
+  const [form, setForm] = useState({ email: '', password: '', remember: false });
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
+  if (isAuthenticated) {
+    const from = location.state?.from?.pathname;
+    return <Navigate to={from || (user?.role === 'admin' ? '/organizer/dashboard' : '/')} replace />;
+  }
+
+  const onChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     try {
-      await login(formData);
-      navigate('/');
+      const res = await login(form);
+      toast.success(`Welcome back, ${res.data.user.name}!`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(getErrorMessage(err, 'Login failed. Please check your email and password.'));
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
+    <div className="flex h-screen w-full overflow-hidden font-sans antialiased bg-[#f4f5f3]">
+      
+      {/* SISI KIRI */}
+      <div className="hidden lg:block lg:w-[55%] relative h-full">
+        <img 
+          src={backgroundImg} 
+          alt="Runners in forest" 
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-black/10"></div>
+      </div>
+
+      {/* SISI KANAN */}
+      <div className="w-full lg:w-[45%] h-full flex items-center justify-center p-6 bg-[#f4f5f3] relative">
+        
+        {/* Kotak Form Putih */}
+        <div className="bg-white w-full max-w-[400px] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 z-10">
+          
+          <h2 className="text-[26px] font-black text-gray-900 mb-1.5 tracking-tight">Welcome back</h2>
+          <p className="text-[13px] text-gray-500 mb-6 leading-relaxed">
+            Sign in to access the participant portal and prepare for your race.
           </p>
-        </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
+          <form onSubmit={onSubmit}>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+            {/* Tampilkan Error jika Login Gagal */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl">
+                {error}
+              </div>
+            )}
+            
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-[11px] font-bold text-gray-900 mb-1.5">
+                Participant email
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                value={form.email} 
+                onChange={onChange} 
                 required
                 autoComplete="email"
-                className="appearance-none rounded-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#0c2016] focus:ring-1 focus:ring-[#0c2016] transition-colors" 
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
+
+            <div className="mb-4">
+              <label htmlFor="password" className="block text-[11px] font-bold text-gray-900 mb-1.5">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                value={form.password} 
+                onChange={onChange} 
                 required
                 autoComplete="current-password"
-                className="appearance-none rounded-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#0c2016] focus:ring-1 focus:ring-[#0c2016] transition-colors" 
               />
             </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
+            <div className="flex items-center justify-between mb-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  name="remember" 
+                  checked={form.remember}
+                  onChange={onChange}
+                  className="w-4 h-4 rounded border-gray-300 text-[#0c2016] focus:ring-[#0c2016] cursor-pointer" 
+                />
+                <span className="text-[11px] text-gray-500 group-hover:text-gray-900 transition-colors">
+                  Remember me
+                </span>
+              </label>
+              <Link to="/forgot-password" className="text-[11px] font-bold text-gray-900 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+
+            <button 
+              type="submit" 
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#0c2016] hover:bg-[#183626] disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-[13px] transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              <span>{isLoading ? 'Signing in...' : 'Sign in to portal'}</span>
+              {!isLoading && <i className="ph ph-arrow-right font-bold text-base"></i>}
             </button>
-          </div>
 
-          <div className="text-center text-sm text-gray-600">
-            <Link to="/" className="text-blue-600 hover:text-blue-500">
-              Back to home
-            </Link>
-          </div>
-        </form>
+          </form>
+
+          <p className="text-[11px] text-center text-gray-500 mt-5">
+            <Link to="/register" className="text-gray-900 font-bold hover:underline">
+              No account yet? 
+            </Link>{' '}
+            Activate via your registration email.
+          </p>
+
+        </div>
       </div>
     </div>
   );

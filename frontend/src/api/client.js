@@ -1,66 +1,86 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 });
 
-// Request interceptor - add JWT token & auto refresh
-apiClient.interceptors.request.use(
-  async (config) => {
-    let token = localStorage.getItem('access_token');
+function clearSession() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('auth-storage');
+}
 
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
+function goToLogin() {
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
 
-        // If token expires in less than 5 minutes, refresh it
-        if (decoded.exp - currentTime < 300) {
-          const response = await axios.post(
-            `${API_BASE_URL}/auth/refresh`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+// Satu proses refresh untuk semua request yang berjalan bersamaan
+let refreshPromise = null;
 
-          token = response.data.data.access_token;
-          localStorage.setItem('access_token', token);
-        }
-      } catch (error) {
-        // Token invalid, remove it
-        localStorage.removeItem('access_token');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
+function refreshToken(token) {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(`${API_BASE_URL}/auth/refresh`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        const fresh = res.data.data.access_token;
+        localStorage.setItem('access_token', fresh);
+        return fresh;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
 
-      config.headers.Authorization = `Bearer ${token}`;
+apiClient.interceptors.request.use(async (config) => {
+  let token = localStorage.getItem('access_token');
+  if (!token) return config;
+
+  try {
+    const { exp } = jwtDecode(token);
+    if (exp - Date.now() / 1000 < 300) {
+      token = await refreshToken(token);
     }
+  } catch (error) {
+    clearSession();
+    goToLogin();
+    throw error;
+  }
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-// Response interceptor - handle errors
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
+    const url = error.config?.url ?? '';
+    const isAuthForm = url.includes('/auth/login') || url.includes('/auth/register');
+    if (error.response?.status === 401 && !isAuthForm) {
+      clearSession();
+      goToLogin();
     }
     return Promise.reject(error);
   }
 );
+
+// Ambil pesan error yang paling berguna dari respons API
+export function getErrorMessage(error, fallback = 'Something went wrong. Please try again.') {
+  const data = error?.response?.data;
+  if (data?.errors && typeof data.errors === 'object') {
+    const first = Object.values(data.errors).flat()[0];
+    if (typeof first === 'string') return first;
+  }
+  return data?.message || fallback;
+}
 
 export default apiClient;

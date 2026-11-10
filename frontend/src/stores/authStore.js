@@ -2,97 +2,76 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '../api/auth';
 
+const TOKEN_KEY = 'access_token';
+
 export const useAuthStore = create(
   persist(
-    (set, get) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
+    (set) => {
+      const startSession = (data) => {
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        set({ user: data.user, isAuthenticated: true });
+      };
 
-      login: async (credentials) => {
-        set({ isLoading: true });
-        try {
-          const response = await authAPI.login(credentials);
-          const { user, access_token } = response.data;
+      const endSession = () => {
+        localStorage.removeItem(TOKEN_KEY);
+        set({ user: null, isAuthenticated: false });
+      };
 
-          localStorage.setItem('access_token', access_token);
+      return {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
 
-          set({
-            user,
-            token: access_token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
+        login: async (credentials) => {
+          set({ isLoading: true });
+          try {
+            const res = await authAPI.login(credentials);
+            startSession(res.data);
+            return res;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
 
-          return response;
-        } catch (error) {
-          set({ isLoading: false });
-          throw error;
-        }
-      },
+        register: async (payload) => {
+          set({ isLoading: true });
+          try {
+            const res = await authAPI.register(payload);
+            startSession(res.data);
+            return res;
+          } finally {
+            set({ isLoading: false });
+          }
+        },
 
-      register: async (data) => {
-        set({ isLoading: true });
-        try {
-          const response = await authAPI.register(data);
-          const { user, access_token } = response.data;
+        logout: async () => {
+          try {
+            await authAPI.logout();
+          } catch {
+            // token sudah tidak berlaku, tetap bersihkan sesi lokal
+          } finally {
+            endSession();
+          }
+        },
 
-          localStorage.setItem('access_token', access_token);
-
-          set({
-            user,
-            token: access_token,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-
-          return response;
-        } catch (error) {
-          set({ isLoading: false });
-          throw error;
-        }
-      },
-
-      logout: async () => {
-        try {
-          await authAPI.logout();
-        } finally {
-          localStorage.removeItem('access_token');
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-          });
-        }
-      },
-
-      fetchUser: async () => {
-        const token = localStorage.getItem('access_token');
-
-        if (!token) {
-          set({ user: null, token: null, isAuthenticated: false });
-          return;
-        }
-
-        try {
-          const response = await authAPI.me();
-          set({
-            user: response.data.user,
-            token,
-            isAuthenticated: true,
-          });
-        } catch (error) {
-          get().logout();
-        }
-      },
-    }),
+        // Dipanggil saat aplikasi dibuka untuk memastikan token masih berlaku
+        fetchUser: async () => {
+          if (!localStorage.getItem(TOKEN_KEY)) {
+            endSession();
+            return;
+          }
+          try {
+            const res = await authAPI.me();
+            set({ user: res.data.user, isAuthenticated: true });
+          } catch {
+            endSession();
+          }
+        },
+      };
+    },
     {
       name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )
 );
