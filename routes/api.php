@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ResultController;
+use App\Http\Controllers\Api\TransferController;
 
 Route::prefix('v1')->group(function () {
 
@@ -49,6 +50,10 @@ Route::prefix('v1')->group(function () {
         
         Route::post('payments/checkout', [PaymentController::class, 'checkout']);
         Route::get('payments/{orderId}', [PaymentController::class, 'show']);   
+
+        Route::get('transfers', [TransferController::class, 'index']);
+        Route::post('registrations/{id}/transfer', [TransferController::class, 'store']);
+        Route::patch('transfers/{id}', [TransferController::class, 'respond']);
         
 
         // ================== ADMIN ONLY ROUTES ==================

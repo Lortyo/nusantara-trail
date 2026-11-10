@@ -28,7 +28,7 @@ class RegistrationController extends Controller
     private const HOLD_MINUTES = 15;
     private const ADMIN_FEE = 0;
 
-    private const REQUIRED_PROFILE_FIELDS = [
+    public const REQUIRED_PROFILE_FIELDS = [
         'fullName', 'bibName', 'gender', 'dateOfBirth', 'nationality', 'phone',
         'address', 'city', 'country', 'identity_type', 'identity_number',
         'emergency_name', 'emergency_phone', 'emergency_relationship',
