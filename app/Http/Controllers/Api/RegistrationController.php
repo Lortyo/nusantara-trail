@@ -19,12 +19,14 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use App\Models\CategoryChange;
 
 class RegistrationController extends Controller
 {
     use ParticipantHelpers;
 
     private const HOLD_MINUTES = 15;
+    private const ADMIN_FEE = 0;
 
     private const REQUIRED_PROFILE_FIELDS = [
         'fullName', 'bibName', 'gender', 'dateOfBirth', 'nationality', 'phone',
@@ -228,7 +230,7 @@ class RegistrationController extends Controller
         return response()->json(['success' => true, 'message' => 'Reservasi dibatalkan, slot dikembalikan']);
     }
 
-        private function qrDataUri(string $payload): string
+    private function qrDataUri(string $payload): string
     {
         $writer = new Writer(new ImageRenderer(new RendererStyle(320, 1), new SvgImageBackEnd()));
 
@@ -271,6 +273,109 @@ class RegistrationController extends Controller
                 'kitCollectedAt' => optional($ticket->kitCollectedAt)->toIso8601String(),
                 'checkedInAt' => optional($ticket->checkedInAt)->toIso8601String(),
                 'issuedAt' => optional($ticket->issuedAt)->toIso8601String(),
+            ],
+        ]);
+    }
+
+    // POST /registrations/{id}/change-category
+    public function changeCategory(Request $request, string $id)
+    {
+        $validator = Validator::make($request->all(), ['new_category_id' => 'required|string']);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $uid = (string) $request->user()->getKey();
+        $reg = Registration::where('_id', $id)->where('user_id', $uid)->first();
+        if (! $reg) {
+            return $this->fail('Pendaftaran tidak ditemukan', 404);
+        }
+        if ($reg->status !== 'paid') {
+            return $this->fail('Hanya pendaftaran yang sudah lunas yang dapat pindah kategori', 409);
+        }
+
+        $event = RaceEvent::find($reg->event_id);
+        $current = RaceCategory::find($reg->category_id);
+        $to = RaceCategory::where('_id', $request->input('new_category_id'))
+            ->where('event_id', (string) $reg->event_id)->first();
+        if (! $to) {
+            return $this->fail('Kategori tujuan tidak ditemukan pada event ini', 404);
+        }
+        if ((string) $to->getKey() === (string) $current->getKey()) {
+            return $this->fail('Pilih kategori yang berbeda', 400);
+        }
+
+        $deadline = $event->categoryChangeDeadline ?? $event->registrationCloseAt;
+        if (! $deadline || now()->gte($deadline)) {
+            return $this->fail('Perubahan kategori sudah ditutup untuk event ini', 409);
+        }
+
+        $hasPending = CategoryChange::where('registration_id', (string) $reg->getKey())
+            ->where('status', 'pending_payment')->where('expiresAt', '>', now())->exists();
+        if ($hasPending) {
+            return $this->fail('Anda masih punya perubahan kategori yang menunggu pembayaran', 409);
+        }
+
+        if (data_get($to, 'qualification.required')) {
+            $approved = Qualification::where('user_id', $uid)
+                ->where('category_id', (string) $to->getKey())->where('status', 'approved')->exists();
+            if (! $approved) {
+                return $this->fail('Kategori tujuan membutuhkan kualifikasi yang sudah disetujui', 403);
+            }
+        }
+
+        $newPrice = $this->priceFor($to, $this->isLocal($uid));
+        $diff = $newPrice - (int) $reg->totalAmount;
+        $total = max($diff, 0) + self::ADMIN_FEE;
+
+        // Tahan slot kategori tujuan secara atomik
+        $took = RaceCategory::where('_id', $to->getKey())->where('slotsAvailable', '>', 0)->decrement('slotsAvailable');
+        if (! $took) {
+            return $this->fail('Kuota kategori tujuan habis', 409);
+        }
+
+        $change = CategoryChange::create([
+            'registration_id' => (string) $reg->getKey(),
+            'user_id' => $uid,
+            'event_id' => (string) $reg->event_id,
+            'from_category_id' => (string) $current->getKey(),
+            'to_category_id' => (string) $to->getKey(),
+            'newPrice' => $newPrice,
+            'priceDifference' => $diff,
+            'adminFee' => self::ADMIN_FEE,
+            'total' => $total,
+            'status' => $total > 0 ? 'pending_payment' : 'completed',
+            'expiresAt' => now()->addMinutes(self::HOLD_MINUTES),
+        ]);
+
+        if ($total > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ada selisih biaya yang harus dibayar',
+                'errors' => ['difference' => $total],
+                'data' => [
+                    'change_id' => (string) $change->getKey(),
+                    'total' => $total,
+                    'expiresAt' => $change->expiresAt->toIso8601String(),
+                ],
+            ], 402);
+        }
+
+        // Tanpa biaya tambahan: pindah langsung, slot kategori lama dikembalikan
+        RaceCategory::where('_id', $current->getKey())->increment('slotsAvailable');
+        $reg->update(['category_id' => (string) $to->getKey(), 'totalAmount' => $newPrice]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori diubah',
+            'data' => [
+                'id' => (string) $reg->getKey(),
+                'category' => $this->km($to->distanceKm) . 'K ' . $to->name,
+                'totalAmount' => $newPrice,
             ],
         ]);
     }

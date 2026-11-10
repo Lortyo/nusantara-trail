@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\OrganizerController;
+use App\Http\Controllers\Api\ResultController;
 
 Route::prefix('v1')->group(function () {
 
@@ -31,6 +32,9 @@ Route::prefix('v1')->group(function () {
 
     Route::post('payments/notification', [PaymentController::class, 'notification']);
 
+    Route::get('events/{id}/entry-list', [EventController::class, 'entryList']);
+    Route::get('events/{eventId}/results', [ResultController::class, 'index']);
+
     // ================== PROTECTED ROUTES ==================
     Route::middleware('auth:api')->group(function () {
         Route::get('profile', [ProfileController::class, 'show']);
@@ -41,9 +45,11 @@ Route::prefix('v1')->group(function () {
         Route::get('registrations/{id}', [RegistrationController::class, 'show']);
         Route::delete('registrations/{id}', [RegistrationController::class, 'destroy']);
         Route::get('registrations/{id}/credential', [RegistrationController::class, 'credential']);
+        Route::post('registrations/{id}/change-category', [RegistrationController::class, 'changeCategory']);
         
         Route::post('payments/checkout', [PaymentController::class, 'checkout']);
         Route::get('payments/{orderId}', [PaymentController::class, 'show']);   
+        
 
         // ================== ADMIN ONLY ROUTES ==================
         Route::middleware('admin')->group(function () {
@@ -57,6 +63,8 @@ Route::prefix('v1')->group(function () {
             Route::get('organizer/registrations', [OrganizerController::class, 'registrations']);
             Route::post('organizer/checkin/scan', [OrganizerController::class, 'scan']);
             Route::get('organizer/dashboard/summary', [OrganizerController::class, 'dashboardSummary']);
+            Route::post('organizer/events/{eventId}/results', [ResultController::class, 'store']);
+            Route::put('organizer/results/{id}', [ResultController::class, 'update']);
         });
     });
 });

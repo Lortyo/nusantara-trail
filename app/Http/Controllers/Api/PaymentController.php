@@ -11,6 +11,7 @@ use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Models\CategoryChange;
 
 class PaymentController extends Controller
 {
@@ -21,10 +22,13 @@ class PaymentController extends Controller
         return response()->json(['success' => false, 'message' => $message], $status);
     }
 
-    // POST /payments/checkout
+    // POST /payments/checkout  (registration_id untuk pendaftaran, change_id untuk pindah kategori)
     public function checkout(Request $request)
     {
-        $validator = Validator::make($request->all(), ['registration_id' => 'required|string']);
+        $validator = Validator::make($request->all(), [
+            'registration_id' => 'required_without:change_id|nullable|string',
+            'change_id' => 'required_without:registration_id|nullable|string',
+        ]);
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -34,32 +38,56 @@ class PaymentController extends Controller
         }
 
         $user = $request->user();
-        $reg = Registration::where('_id', $request->input('registration_id'))
-            ->where('user_id', (string) $user->getKey())->first();
-        if (! $reg) {
-            return $this->fail('Pendaftaran tidak ditemukan', 404);
-        }
-        if ($reg->status !== 'pending' || now()->gte($reg->expiresAt)) {
-            return $this->fail('Reservasi sudah kedaluwarsa atau sudah dibayar', 409);
+        $uid = (string) $user->getKey();
+
+        if ($request->filled('change_id')) {
+            $chg = CategoryChange::where('_id', $request->input('change_id'))->where('user_id', $uid)->first();
+            if (! $chg) {
+                return $this->fail('Permintaan pindah kategori tidak ditemukan', 404);
+            }
+            if ($chg->status !== 'pending_payment' || now()->gte($chg->expiresAt)) {
+                return $this->fail('Permintaan pindah kategori sudah kedaluwarsa atau sudah dibayar', 409);
+            }
+
+            $field = 'change_id';
+            $refId = (string) $chg->getKey();
+            $purpose = 'upgrade';
+            $amount = (int) $chg->total;
+            $itemName = 'Category change';
+            $expiresAt = $chg->expiresAt;
+        } else {
+            $reg = Registration::where('_id', $request->input('registration_id'))->where('user_id', $uid)->first();
+            if (! $reg) {
+                return $this->fail('Pendaftaran tidak ditemukan', 404);
+            }
+            if ($reg->status !== 'pending' || now()->gte($reg->expiresAt)) {
+                return $this->fail('Reservasi sudah kedaluwarsa atau sudah dibayar', 409);
+            }
+
+            $field = 'registration_id';
+            $refId = (string) $reg->getKey();
+            $purpose = 'registration';
+            $amount = (int) $reg->totalAmount;
+            $itemName = optional(RaceEvent::find($reg->event_id))->name . ' ' . optional(RaceCategory::find($reg->category_id))->name;
+            $expiresAt = $reg->expiresAt;
         }
 
         // Pakai ulang transaksi pending yang sudah punya snap token
-        $payment = Payment::where('registration_id', (string) $reg->getKey())->where('status', 'pending')->first();
+        $payment = Payment::where($field, $refId)->where('status', 'pending')->first();
 
         if (! $payment || ! $payment->snapToken) {
             $payment = $payment ?: Payment::create([
-                'registration_id' => (string) $reg->getKey(),
-                'user_id' => (string) $user->getKey(),
+                $field => $refId,
+                'user_id' => $uid,
                 'orderId' => 'NTS-' . strtoupper(Str::random(8)) . '-' . time(),
-                'purpose' => 'registration',
+                'purpose' => $purpose,
                 'gateway' => 'midtrans',
-                'amount' => (int) $reg->totalAmount,
+                'amount' => $amount,
                 'status' => 'pending',
             ]);
 
             try {
-                $itemName = optional(RaceEvent::find($reg->event_id))->name . ' ' . optional(RaceCategory::find($reg->category_id))->name;
-                $payment->update(['snapToken' => $this->midtrans->snapToken($payment, $user, $itemName, $reg->expiresAt)]);
+                $payment->update(['snapToken' => $this->midtrans->snapToken($payment, $user, $itemName, $expiresAt)]);
             } catch (\Throwable $e) {
                 report($e);
                 $payment->delete();

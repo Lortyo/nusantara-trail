@@ -7,9 +7,64 @@ use App\Models\RaceCategory;
 use App\Models\RaceEvent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Concerns\ParticipantHelpers;
+use App\Models\Profile;
+use App\Models\Registration;
+use App\Models\Ticket;
 
 final class EventController extends Controller
 {
+    use ParticipantHelpers;
+    public function entryList(Request $request, string $id)
+    {
+        $event = RaceEvent::find($id);
+        if (! $event || $event->status === 'draft') {
+            return response()->json(['success' => false, 'message' => 'Event tidak ditemukan'], 404);
+        }
+
+        $limit = min(max((int) $request->query('limit', 50), 1), 200);
+        $q = Ticket::where('event_id', $id);
+
+        $category = $request->query('category_id');
+        if (is_string($category) && $category !== '') {
+            $ids = Registration::where('event_id', $id)->where('category_id', $category)->where('status', 'paid')
+                ->get()->map(fn ($r) => (string) $r->getKey())->all();
+            $q->whereIn('registration_id', $ids);
+        }
+
+        $page = $q->orderBy('issuedAt')->paginate($limit);
+        $tickets = $page->getCollection();
+
+        $regs = Registration::whereIn('_id', $tickets->pluck('registration_id')->all())->get()
+            ->keyBy(fn ($r) => (string) $r->getKey());
+        $profiles = Profile::whereIn('user_id', $regs->pluck('user_id')->map(fn ($v) => (string) $v)->all())->get()
+            ->keyBy(fn ($p) => (string) $p->user_id);
+        $cats = RaceCategory::whereIn('_id', $regs->pluck('category_id')->unique()->all())->get()
+            ->keyBy(fn ($c) => (string) $c->getKey());
+
+        $data = $tickets->map(function ($t) use ($regs, $profiles, $cats) {
+            $r = $regs[(string) $t->registration_id] ?? null;
+            $c = $r ? ($cats[(string) $r->category_id] ?? null) : null;
+
+            return [
+                'bibNumber' => $t->bibNumber,
+                'bibName' => $r ? optional($profiles[(string) $r->user_id] ?? null)->bibName : null,
+                'category' => $c ? $this->km($c->distanceKm) . 'K' : null,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OK',
+            'data' => $data,
+            'meta' => [
+                'page' => $page->currentPage(),
+                'limit' => $page->perPage(),
+                'total' => $page->total(),
+                'last_page' => $page->lastPage(),
+            ],
+        ]);
+    }
     public function index(Request $request)
     {
         $limit = min(max((int) $request->query('limit', 10), 1), 50);
