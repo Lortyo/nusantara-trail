@@ -8,27 +8,19 @@ class RaceCategory extends Model
 {
     protected $connection = 'mongodb';
 
-    protected $collection = 'categories';
-
     protected $fillable = [
-        'event_id',
-        'name',
-        'distanceKm',
-        'elevationGain',
-        'cutoffHours',
-        'quota',
-        'slotsAvailable',
-        'prices',
-        'benefits',
+        'event_id', 'name', 'distanceKm', 'elevationGain', 'cutOffHours',
+        'quota', 'slotsAvailable', 'price', 'benefits', 'qualification',
     ];
 
     protected $casts = [
         'distanceKm' => 'float',
         'elevationGain' => 'float',
-        'cutoffHours' => 'float',
+        'cutOffHours' => 'float',
         'quota' => 'integer',
         'slotsAvailable' => 'integer',
-        'prices' => 'array',
+        'price' => 'array',
         'benefits' => 'array',
+        'qualification' => 'array',
     ];
 }
