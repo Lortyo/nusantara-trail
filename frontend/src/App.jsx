@@ -9,6 +9,10 @@ import ComingSoon from './pages/ComingSoon';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { useAuthStore } from './stores/authStore';
+import EntryList from './pages/EntryList';
+import EventDetail from './pages/EventDetail';
+import EventsList from './pages/EventsList';
+import Results from './pages/Results';
 
 export default function App() {
   const fetchUser = useAuthStore((s) => s.fetchUser);
@@ -26,10 +30,10 @@ export default function App() {
 
         {/* Halaman publik */}
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<ComingSoon title="Events" />} />
-          <Route path="/events/:id" element={<ComingSoon title="Event detail" />} />
-          <Route path="/events/:id/entry-list" element={<ComingSoon title="Entry list" />} />
-          <Route path="/events/:id/results" element={<ComingSoon title="Race results" />} />
+          <Route path="/" element={<EventsList />} />
+          <Route path="/events/:id" element={<EventDetail />} />`
+          <Route path="/events/:id/entry-list" element={<EntryList />} />
+          <Route path="/events/:id/results" element={<Results />} />`
 
           <Route element={<RequireAuth roles={['user']} />}>
             <Route path="/payment/:registrationId" element={<ComingSoon title="Payment" />} />
