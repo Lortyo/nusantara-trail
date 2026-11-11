@@ -13,6 +13,12 @@ import EntryList from './pages/EntryList';
 import EventDetail from './pages/EventDetail';
 import EventsList from './pages/EventsList';
 import Results from './pages/Results';
+import BibTransfer from './pages/dashboard/BibTransfer';
+import MyRace from './pages/dashboard/MyRace';
+import Profile from './pages/dashboard/Profile';
+import RaceKits from './pages/dashboard/RaceKits';
+import UpgradeDowngrade from './pages/dashboard/UpgradeDowngrade';
+import Payment from './pages/Payment';
 
 export default function App() {
   const fetchUser = useAuthStore((s) => s.fetchUser);
@@ -36,7 +42,7 @@ export default function App() {
           <Route path="/events/:id/results" element={<Results />} />`
 
           <Route element={<RequireAuth roles={['user']} />}>
-            <Route path="/payment/:registrationId" element={<ComingSoon title="Payment" />} />
+            <Route path="/payment/:registrationId" element={<Payment />} />
           </Route>
         </Route>
 
@@ -44,11 +50,11 @@ export default function App() {
         <Route element={<RequireAuth roles={['user']} />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Navigate to="my-race" replace />} />
-            <Route path="profile" element={<ComingSoon title="Profile" />} />
-            <Route path="my-race" element={<ComingSoon title="My race" />} />
-            <Route path="race-kits" element={<ComingSoon title="Race kits" />} />
-            <Route path="bib-transfer" element={<ComingSoon title="BIB transfer" />} />
-            <Route path="upgrade-downgrade" element={<ComingSoon title="Upgrade / downgrade" />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="my-race" element={<MyRace />} />
+            <Route path="race-kits" element={<RaceKits />} />
+            <Route path="bib-transfer" element={<BibTransfer />} />
+            <Route path="upgrade-downgrade" element={<UpgradeDowngrade />} />
           </Route>
         </Route>
 
