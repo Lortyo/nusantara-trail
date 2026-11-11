@@ -19,6 +19,12 @@ import Profile from './pages/dashboard/Profile';
 import RaceKits from './pages/dashboard/RaceKits';
 import UpgradeDowngrade from './pages/dashboard/UpgradeDowngrade';
 import Payment from './pages/Payment';
+import Checkin from './pages/organizer/Checkin';
+import OrganizerDashboard from './pages/organizer/Dashboard';
+import EventForm from './pages/organizer/EventForm';
+import OrganizerEvents from './pages/organizer/Events';
+import Participants from './pages/organizer/Participants';
+import OrganizerResults from './pages/organizer/Results';
 
 export default function App() {
   const fetchUser = useAuthStore((s) => s.fetchUser);
@@ -62,11 +68,13 @@ export default function App() {
         <Route element={<RequireAuth roles={['admin']} />}>
           <Route path="/organizer" element={<OrganizerLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<ComingSoon title="Dashboard" />} />
-            <Route path="events" element={<ComingSoon title="Events" />} />
-            <Route path="participants" element={<ComingSoon title="Participants" />} />
-            <Route path="checkin" element={<ComingSoon title="Check-in" />} />
-            <Route path="results" element={<ComingSoon title="Results" />} />
+            <Route path="dashboard" element={<OrganizerDashboard />} />
+            <Route path="events" element={<OrganizerEvents />} />
+            <Route path="events/new" element={<EventForm />} />
+            <Route path="events/:id" element={<EventForm />} />
+            <Route path="participants" element={<Participants />} />
+            <Route path="checkin" element={<Checkin />} />
+            <Route path="results" element={<OrganizerResults />} />
           </Route>
         </Route>
 

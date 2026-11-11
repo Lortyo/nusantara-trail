@@ -70,6 +70,8 @@ Route::prefix('v1')->group(function () {
             Route::get('organizer/dashboard/summary', [OrganizerController::class, 'dashboardSummary']);
             Route::post('organizer/events/{eventId}/results', [ResultController::class, 'store']);
             Route::put('organizer/results/{id}', [ResultController::class, 'update']);
+            Route::get('organizer/events', [EventController::class, 'adminIndex']);
+            Route::get('organizer/events/{id}', [EventController::class, 'adminShow']);
         });
     });
 });

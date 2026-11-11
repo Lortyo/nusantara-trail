@@ -1,6 +1,8 @@
 import apiClient from './client';
 
 export const organizerAPI = {
+  events: (params) => apiClient.get('/organizer/events', { params }),
+  event: (id) => apiClient.get(`/organizer/events/${id}`),
   registrations: (params) => apiClient.get('/organizer/registrations', { params }),
   scan: (data) => apiClient.post('/organizer/checkin/scan', data),
   summary: (params) => apiClient.get('/organizer/dashboard/summary', { params }),

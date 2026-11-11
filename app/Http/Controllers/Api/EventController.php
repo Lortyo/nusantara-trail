@@ -174,4 +174,65 @@ final class EventController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Status event diperbarui', 'data' => $event->fresh()]);
     }
+        // GET /organizer/events  (semua status, termasuk draft)
+    public function adminIndex(Request $request)
+    {
+        $limit = min(max((int) $request->query('limit', 10), 1), 100);
+        $q = RaceEvent::query();
+
+        $s = $request->query('q');
+        if (is_string($s) && trim($s) !== '') {
+            $q->where('name', 'like', '%' . trim($s) . '%');
+        }
+        $status = $request->query('status');
+        if (is_string($status) && $status !== '') {
+            $q->where('status', $status);
+        }
+
+        $page = $q->orderBy('eventDate', 'desc')->paginate($limit);
+        $ids = $page->getCollection()->map(fn ($e) => (string) $e->getKey())->all();
+        $cats = RaceCategory::whereIn('event_id', $ids)->get()->groupBy('event_id');
+
+        $data = $page->getCollection()->map(function ($e) use ($cats) {
+            $id = (string) $e->getKey();
+            $list = ($cats[$id] ?? collect())->sortBy('distanceKm');
+
+            return array_merge($e->toArray(), [
+                'id' => $id,
+                'stats' => [
+                    'label' => $list->map(fn ($c) => $this->km($c->distanceKm) . 'K')->implode(' / ') ?: '-',
+                    'taken' => (int) $list->sum(fn ($c) => $c->quota - $c->slotsAvailable),
+                    'total' => (int) $list->sum('quota'),
+                ],
+            ]);
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => [
+                'page' => $page->currentPage(),
+                'limit' => $page->perPage(),
+                'total' => $page->total(),
+                'last_page' => $page->lastPage(),
+            ],
+        ]);
+    }
+
+    // GET /organizer/events/{id}  (termasuk draft)
+    public function adminShow(string $id)
+    {
+        $event = RaceEvent::find($id);
+        if (! $event) {
+            return response()->json(['success' => false, 'message' => 'Event tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'event' => $event,
+                'categories' => RaceCategory::where('event_id', $id)->orderBy('distanceKm')->get(),
+            ],
+        ]);
+    }
 }
